@@ -59,7 +59,6 @@
 </template>
 
 <script>
-import {listOpus} from "@/api/biz/opus-examine/examine";
 import info from "./info";
 import examine from "./examine";
 import {examinePage} from "../../../api/biz/opus-examine/examine";
