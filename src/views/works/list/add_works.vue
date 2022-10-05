@@ -39,7 +39,11 @@
                         <el-row>
                             <el-col :span="24">
                                 <el-form-item label="作品介绍">
-                                    <editor v-model="form.remark" :min-height="192" />
+                                  <el-input type="textarea"
+                                            :autosize="{ minRows: 5, maxRows: 20}"
+                                            placeholder="作品描叙" v-model="form.remark"
+
+                                  />
                                 </el-form-item>
                             </el-col>
                         </el-row>

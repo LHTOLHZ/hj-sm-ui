@@ -2,15 +2,15 @@
   <el-container>
     <el-aside class="main-left" width="260px">
       <div class="headerImg" style="margin-top: 25px;">
-        <img src="http://localhost:8080/profile/upload/2022/10/02/1664810282134.jpg"
+        <img :src="commentInfo.userUrl"
              width="105" height="105">
 
       </div>
-      <span>erewrew</span>
-      <div class="" style="margin-top: 20px">
-        <span>作品: lsklkfldsfkld <br/></span>
-        <span>日期: 2019-09-10 <br/></span>
-        <span>IP: 127.0.0.1</span>
+      <div v-html="commentInfo.userName"></div>
+      <div style="margin-top: 20px">
+        <div v-html="'作品:' + commentInfo.name"/>
+        <div v-html="'日期:' + commentInfo.createDate"/>
+        <!--        <div v-html="'IP:' + commentInfo.ip"/>-->
       </div>
     </el-aside>
     <el-main class="main-right">
@@ -21,8 +21,10 @@
       <div style="margin-bottom: 5px;">
         <el-input type="textarea"
                   :autosize="{ minRows: 5, maxRows: 20}"
-                  placeholder="作品描叙"
-        />
+                  placeholder="作品描叙" v-model="commentInfo.remark"
+                  readonly
+        >
+        </el-input>
       </div>
       <div class="call_comment" style="text-align: left;font-size: 12px; margin-top:8px;">
         <span>回复评价</span>
@@ -31,19 +33,23 @@
       <div class="from-data" style="text-align: center;">
         <el-form size="small" style="font-size: 12px;">
           <el-form-item style="width: 350px;" label="用户名">
-            <el-input style="width: 250px;" readonly/>
+            <el-input style="width: 250px;" v-model="this.userInfo.nickName" readonly/>
           </el-form-item>
           <el-form-item label="Email" style="width: 350px;">
-            <el-input style="width: 250px;" readonly/>
+            <el-input style="width: 250px;" v-model="this.userInfo.email" readonly/>
+
           </el-form-item>
           <el-form-item label="回复内容" style="width: 340px;">
-            <el-input type="textarea" placeholder="请输入内容"
+            <el-input type="textarea" id="infoRemark" placeholder="请输入内容,字数限制50字以内"
+                      oninput="if(value.length > 50) value=value.slice(0,50)"
                       style="width: 250px; font-size: 12px;" :autosize="{ minRows: 5, maxRows: 10}"
                       v-model="textarea"
             />
+
           </el-form-item>
           <el-form-item style="text-align: left;margin-left: 80px;">
-            <el-button type="primary" icon="el-icon-search" size="mini">确定</el-button>
+            <el-button type="primary" icon="el-icon-search" @click="submitInfo()" size="mini">确定</el-button>
+            <el-input name="id" type="hidden" v-model="this.commentInfo.id"/>
           </el-form-item>
         </el-form>
 
@@ -52,11 +58,11 @@
         <span v-html="'全部评论: ' + total"></span>
         <el-divider/>
       </div>
-      <el-table :data="commentDetailList" style="font-size: 12px;"  :show-header="false">
+      <el-table :data="commentDetailList" style="font-size: 12px;" :show-header="false">
         <el-table-column align="left" width="200px;">
           <template slot-scope="scope">
             <div class="headerImg" text-align="left" style="margin-top: 25px;">
-              <img :src="scope.row.userUrl"  width="105" height="105">
+              <img :src="scope.row.userUrl" width="105" height="105">
             </div>
           </template>
         </el-table-column>
@@ -66,11 +72,23 @@
             <span v-if="scope.row.remark != null">
               <div v-html="'回复' + scope.row.nickName + ':' + scope.row.remark "/>
             </span>
-            <div v-html="scope.row.createDate +' <a>隐藏</a>  <a>删除</a>'"/>
+            <div>
+              <span v-html="scope.row.createDate"/>
+
+              <a v-if="scope.row.view > 0" @click="updateViewStatus(scope.row,0)"
+                 style="margin-left:3px;margin-right: 3px;">隐藏</a>
+              <a v-if="scope.row.view < 1" @click="updateViewStatus(scope.row,1)"
+                 style="margin-left:3px;margin-right: 3px;">显示</a>
+              <a @click="delByCommentCode(scope.row)">删除</a>
+            </div>
+
+
+            <!--            <div v-html="scope.row.createDate +' <a>隐藏</a>' + ' <a @click=“delByCommentCode(scope.row)”></a>'"/>-->
           </template>
         </el-table-column>
       </el-table>
-      <pagination v-show="total>0" :total="total" :page.sync="queryDetailParams.pageNum" :limit.sync="queryDetailParams.pageSize"
+      <pagination v-show="total>0" :total="total" :page.sync="queryDetailParams.pageNum"
+                  :limit.sync="queryDetailParams.pageSize"
                   @pagination="getDetailList"
       />
     </el-main>
@@ -78,7 +96,15 @@
 </template>
 
 <script>
-import {getDetailPage} from "@/api/biz/opus-comment/comment";
+import {
+  getDetailPage,
+  getCommentInfo,
+  getLogUserInfo,
+  infoSubmit,
+  changeViewStatus
+} from "@/api/biz/opus-comment/comment";
+import {MessageBox} from "element-ui";
+import {deleteComment} from "../../../api/biz/opus-comment/comment";
 
 export default {
   name: "commentDetailList",
@@ -86,11 +112,7 @@ export default {
     opusId: {
       type: Number,
       default: null
-    },
-    /*nickName:{
-      type: String,
-      default: null
-    }*/
+    }
   },
   data() {
     return {
@@ -109,16 +131,18 @@ export default {
       },
       commentDetailList: [],
       textarea: "",
-      title: ""
+      title: "",
+      commentInfo: {},
+      userInfo: {},
     }
   },
   created() {
-    //this.textarea = "";
     this.getDetailList();
+    this.getInfo();
+    this.getUserInfo();
   },
   methods: {
     getDetailList() {
-      console.log("this.opusId:" + this.opusId);
       if (this.opusId != null) {
         this.queryDetailParams.opusId = this.opusId;
         getDetailPage(this.queryDetailParams).then(response => {
@@ -127,7 +151,61 @@ export default {
         })
       }
     },
+    getInfo() {
+      if (this.opusId != null) {
+        getCommentInfo(this.opusId).then(response => {
+          this.commentInfo = response.data;
+        })
+      }
+    },
+    getUserInfo() {
+      getLogUserInfo().then(response => {
+        this.userInfo = response.data;
+      })
+    },
+    submitInfo() {
+      const length = this.textarea.length;
+      const content = this.textarea;
+      console.log("length===>" + content);
+      if (length < 3) {
+        this.$modal.msgSuccess("评论信息不能小于三个字符");
+        return;
+      }
+      MessageBox.confirm("确定要添加评论?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      }).then(() => {
+        console.log("ok");
+        infoSubmit(this.opusId, this.textarea).then(response => {
+          this.$modal.msgSuccess("添加成功");
+          this.getDetailList();
+          this.textarea = "";
+        });
+      })
+        .catch(() => false);
+    },
+    delByCommentCode(row) {
+      console.log("delByCommentCode===>" + row.commentCode);
+      this.$msgbox.confirm("确定删除评论").then(() => {
+        deleteComment(row.commentCode).then(response => {
+          this.$modal.msgSuccess("删除成功");
+          this.getDetailList();
+        });
 
+      }).catch(() => false);
+    },
+    updateViewStatus(row, view) {
+      console.log("delByCommentCode===>" + row.commentCode);
+      const msg = (view == 0) ? "隐藏" : "显示";
+      this.$msgbox.confirm("确定" + msg + "该评论").then(() => {
+        changeViewStatus(row.commentCode, view).then(response => {
+          this.$modal.msgSuccess(msg + "成功");
+          this.getDetailList();
+        });
+
+      }).catch(() => false);
+    }
   }
 }
 </script>

@@ -117,7 +117,7 @@ export default {
     },
     handleDelete(row){
       this.$modal.confirm('是否确认删除作品评论"' + row.commentCode + '"的数据项？').then(function () {
-        return deleteComment(row.id);
+        return deleteComment(row.commentCode);
       }).then(() => {
         this.getList();
         this.$modal.msgSuccess("删除成功");
@@ -128,7 +128,7 @@ export default {
       console.log('view:===>' + row.view);
       let text = (row.view == 1) ? "显示" : "不显示";
       this.$modal.confirm('确认要设置编号' + row.commentCode + '评论' + text + '吗？').then(function () {
-        return changeViewStatus(row.id, row.view);
+        return changeViewStatus(row.commentCode, row.view);
       }).then(() => {
         this.$modal.msgSuccess("设置" + text + "成功");
       }).catch(function () {
