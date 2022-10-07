@@ -38,10 +38,10 @@
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-view" @click="handleView(scope.row)"
-                     v-hasPermi="['biz:opus:view']">查看
+                     >查看
           </el-button>
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleDelete(scope.row)"
-                     v-hasPermi="['biz:opus:edit']">删除
+                     >删除
           </el-button>
         </template>
       </el-table-column>

@@ -68,9 +68,9 @@
             </el-table-column>
             <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
                 <template slot-scope="scope">
-                    <el-button size="mini" type="text" icon="el-icon-view" @click="handleView(scope.row)" v-hasPermi="['biz:opus:view']">查看</el-button>
-                    <el-button size="mini" type="text" icon="el-icon-edit" @click="handleEdit(scope.row)" v-hasPermi="['biz:opus:edit']">编辑</el-button>
-                    <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)" v-hasPermi="['biz:opus:remove']">删除</el-button>
+                    <el-button size="mini" type="text" icon="el-icon-view" @click="handleView(scope.row)" >查看</el-button>
+                    <el-button size="mini" type="text" icon="el-icon-edit" @click="handleEdit(scope.row)" >编辑</el-button>
+                    <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
