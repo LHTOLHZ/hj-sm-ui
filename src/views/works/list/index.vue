@@ -53,7 +53,7 @@
                     <el-switch v-model.number="scope.row.superior" :active-value="1" :inactive-value="0" @change="handleSuperiorChange(scope.row)"></el-switch>
                 </template>
             </el-table-column>
-            <el-table-column label="是否精选" align="center">
+            <el-table-column label="是否推荐" align="center">
                 <template slot-scope="scope">
                     <el-switch v-model.number="scope.row.selected" :active-value="1" :inactive-value="0" @change="handleSelectedChange(scope.row)"></el-switch>
                 </template>
@@ -138,13 +138,13 @@
                 });
             },
             handleSelectedChange(row) {
-                let text = row.selected === "1" ? "精选" : "非精选";
+                let text = row.selected === 1 ? "推荐" : "不推荐";
                 this.$modal.confirm('确认要设置"' + row.code + '"作品为' + text + '吗？').then(function () {
                     return changeSelectedStatus(row.id, row.selected);
                 }).then(() => {
                     this.$modal.msgSuccess("设置" + text + "成功");
                 }).catch(function () {
-                    row.selected = row.selected === "1" ? "0" : "1";
+                    row.selected = row.selected === 1 ? 0 : 1;
                 });
             },
             handleAdd() {
